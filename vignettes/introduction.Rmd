@@ -152,6 +152,7 @@ legend_image <- rasterFromXYZ(legend_df, res=0.01)
 plot(legend_image, legend.only=T, col=arid_colors, horizontal=T, smallplot=c(0.2, 0.8, 0.55, 0.7), 
 axis.args=list(at=seq(minarid, maxarid, 0.2),labels=seq(minarid, maxarid, 0.2)))
 
+#TODO: Why is there still commented code?
 # # AREA
 # area_300 <- rasterFromXYZ(landscapes$area[, c(1,2,68)])
 # area_65 <- rasterFromXYZ(landscapes$area[, c(1,2,38)])
