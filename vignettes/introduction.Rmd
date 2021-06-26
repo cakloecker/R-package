@@ -216,6 +216,7 @@ sim <- run_simulation(config = file.path(datapath, "config/config_southamerica.R
                output_directory = tempdir(),
                call_observer = 1,
                verbose=0)
+#TODO: does not match datapaths of the simulation repository!
 ```
 
 
