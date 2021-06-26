@@ -180,7 +180,7 @@ axis.args=list(at=seq(minarid, maxarid, 0.2),labels=seq(minarid, maxarid, 0.2)))
    
 
 ### Configuration
-The **configuration** are the rules of our virtual planet, it is where we define all the ecological and evolutionary equations and parameters.
+The **configuration** comprises the rules of our virtual planet, it is where we define all the ecological and evolutionary equations and parameters.
 
 The configuration object includes information on the model initialization, the observer function and the biological functions, namely speciation, dispersal, evolution, and ecology. The possibility of the user to customize these functions confers the flexibility and generality of *gen3sis*. The *initialization* function creates the ancestor species at the start of the simulation. Users can define the number of species, their distribution within the landscape and their trait values. The *observer* function allows recording any abiotic or biotic information of the virtual world as it changes by defining the outputs that are saved at specified time-steps. The configuration further allows to define the *speciation* function, the *dispersal* function, the *evolution* function and the *ecology* function, which are defined in the section on core processes below. Altogether, those six functions are specified in the configuration object and interact with a set of core objects defined in the simulation engine. The configuration object further lists the ecological traits considered in the simulation, sets a random seed allowing simulation reproducibility, start and end times of the simulation, as well as simulation aborting rules including the limits for a total or local number of species.
 
