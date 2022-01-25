@@ -97,7 +97,8 @@ run_simulation <- function(config = NA,
 
   directories <- prepare_directories(config_file = config,
                                      input_directory = landscape,
-                                     output_directory = output_directory)
+                                     output_directory = output_directory,
+                                     verbose = verbose)
 
   if(is.na(config)[1]){
     stop("please provide either a config file or a config object")

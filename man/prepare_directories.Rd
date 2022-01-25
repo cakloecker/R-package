@@ -7,7 +7,8 @@
 prepare_directories(
   config_file = NA,
   input_directory = NA,
-  output_directory = NA
+  output_directory = NA,
+  verbose = 1
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ prepare_directories(
 \item{input_directory}{path to input directory, if NA it will be derived from the config file path}
 
 \item{output_directory}{path to output directory, if NA it will be derived from the config file path}
+
+\item{verbose}{integer value (i.e. 0, 1 ,2 or 3) to control verbosity of print statements}
 }
 \value{
 returns a named list with the paths for the input and output directories

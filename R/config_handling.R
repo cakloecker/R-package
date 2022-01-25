@@ -7,15 +7,16 @@
 #' @param config_file path to the config file, if NA the default config will be used
 #' @param input_directory path to input directory, if NA it will be derived from the config file path
 #' @param output_directory path to output directory, if NA it will be derived from the config file path
+#' @param verbose integer value (i.e. 0, 1 ,2 or 3) to control verbosity of print statements
 #' @return returns a named list with the paths for the input and output directories
-#'
 #' @importFrom tools file_path_sans_ext
 #' @example inst/examples/prepare_directories_help.R
 #' @export
 #' 
 prepare_directories <- function(config_file = NA,
                                 input_directory = NA,
-                                output_directory = NA) {
+                                output_directory = NA,
+                                verbose = 1) {
   #no default config, config file must be given
   if(is.na(config_file)[1]) {
     stop("no config file provided!")
@@ -24,7 +25,9 @@ prepare_directories <- function(config_file = NA,
   } else if(!file.exists(config_file)){
     stop("config file does not exist!")
   } else {
-    print(paste("config found:", config_file))
+    if(verbose > 0){
+      print(paste("config found:", config_file))  
+    }
   }
 
   if(is.na(input_directory)) {
@@ -37,8 +40,10 @@ prepare_directories <- function(config_file = NA,
   if(!dir.exists(input_dir)){
     stop(paste("input directory does not exist!:", input_dir))
   }
-  print(paste("landscape found:", input_directory))
-
+  if(verbose > 0){
+    print(paste("landscape found:", input_directory))
+  }
+  
   if(is.na(output_directory)) {
     if (class(config_file)=="gen3sis_config"){
       path <- strsplit(input_dir, "/")[[1]]
@@ -66,8 +71,11 @@ prepare_directories <- function(config_file = NA,
   }
   dir$output <- file.path(output_dir, config_name)
   dir.create(dir$output, recursive=TRUE, showWarnings = FALSE)
-  print(paste("output directory is:", dir$output))
-
+  
+  if(verbose > 0){
+    print(paste("output directory is:", dir$output))
+  }
+  
   #dir$output_species <- file.path(dir$output, "species")
   #dir.create(dir$output_species, recursive=TRUE, showWarnings = FALSE)
   #dir$output_landscapes <- file.path(dir$output, "landscapes")
