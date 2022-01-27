@@ -158,3 +158,56 @@ save_extract <- function(element) {
           file = file.path(config$directories$output, element, paste0(element, "_t_", vars$ti, ".rds")))
 }
 
+#' This function can be called within the observer function to save a presence-absence matrix for each species.
+#' saves matrix for each timestep in respective "pa_matrices" folder within output folder
+#' matrix format: first two columns x and y contain x&y coordinates, subsequent columns contain pa-values (0 or 1) for each cell (rows) for each species (cols)
+#' @export
+#' @return presence-absence matrix
+save_pa_matrix <- function(c){
+  
+  config <- dynGet("config")
+  data <- dynGet("data")
+  vars <-  dynGet("vars")
+  
+  # if file path does not exist, create pa_matrices folder
+  if(!file.exists(file.path(config$directories$output, "pa_matrices"))){dir.create(file.path(config$directories$output, "pa_matrices"))}
+  pa_matrix <- data.frame(matrix(0,nrow=length(data$landscape$coordinates[,1]), ncol=(length(data$all_species)+2)))
+  pa_matrix[,1:2]<-data$landscape$coordinates
+  rownames(pa_matrix) <- rownames(data$landscape$coordinates)
+  names(pa_matrix)[1:2] <- c("x", "y")
+  names(pa_matrix)[3:length(pa_matrix)] <-unlist(lapply(data$all_species, FUN=function(x){x$id}))
+  for(i in 3:(length(pa_matrix[1,]))){
+    pa_matrix[names(data$all_species[[i-2]]$abundance),i] <- 1
+  }
+  # reverse indicated timestep to ensure numbers increase over time (reverse order as in gen3sis simulation)
+  write.table(pa_matrix, file.path(config$directories$output,"pa_matrices", paste0("species_pa_",c$meta$N_TIMESTEPS-vars$ti, ".txt")), row.names = F, col.names = T)
+  
+  return(pa_matrix)
+}
+
+#' This function can be called within the observer function to save a presence-absence matrix for each species.
+#' saves matrix for each timestep in respective "abundance_matrices" folder within output folder
+#' matrix format: first two columns x and y contain x&y coordinates, subsequent columns contain abundance values for each cell (rows) for each species (cols)
+#' @export
+#' @return abundance matrix
+save_abund_matrix <- function(c){
+  
+  config <- dynGet("config")
+  data <- dynGet("data")
+  vars <-  dynGet("vars")
+  
+  # make abundance matrices
+  if(!file.exists(file.path(config$directories$output, "abundance_matrices"))){dir.create(file.path(config$directories$output, "abundance_matrices"))}
+  abundance_matrix <- data.frame(matrix(0,nrow=length(data$landscape$coordinates[,1]), ncol=(length(data$all_species)+2)))
+  abundance_matrix[,1:2]<-data$landscape$coordinates
+  rownames(abundance_matrix) <- rownames(data$landscape$coordinates)
+  names(abundance_matrix)[1:2] <- c("x", "y")
+  names(abundance_matrix)[3:length(abundance_matrix)] <-unlist(lapply(data$all_species, FUN=function(x){x$id}))
+  for(i in 3:(length(abundance_matrix[1,]))){
+    abundance_matrix[names(data$all_species[[i-2]]$abundance),i] <- data$all_species[[i-2]]$abundance
+  }
+  # reverse indicated timestep to ensure numbers increase over time (reverse order in gen3sis simulation)
+  write.table(abundance_matrix, file.path(config$directories$output,"abundance_matrices", paste0("species_abund_",c$meta$N_TIMESTEPS-vars$ti, ".txt")), row.names = F, col.names = T)
+  
+  return(abundance_matrix)
+}
