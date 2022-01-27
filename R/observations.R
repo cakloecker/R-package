@@ -162,6 +162,7 @@ save_extract <- function(element) {
 #' saves matrix for each timestep in respective "pa_matrices" folder within output folder
 #' matrix format: first two columns x and y contain x&y coordinates, subsequent columns contain pa-values (0 or 1) for each cell (rows) for each species (cols)
 #' @export
+#' @param c config.yml which entails the parameter 'timesteps' that was set for the simulation
 #' @return presence-absence matrix
 save_pa_matrix <- function(c){
   
@@ -180,7 +181,7 @@ save_pa_matrix <- function(c){
     pa_matrix[names(data$all_species[[i-2]]$abundance),i] <- 1
   }
   # reverse indicated timestep to ensure numbers increase over time (reverse order as in gen3sis simulation)
-  write.table(pa_matrix, file.path(config$directories$output,"pa_matrices", paste0("species_pa_",c$meta$N_TIMESTEPS-vars$ti, ".txt")), row.names = F, col.names = T)
+  write.table(pa_matrix, file.path(config$directories$output,"pa_matrices", paste0("species_pa_",c$timesteps-vars$ti, ".txt")), row.names = F, col.names = T)
   
   return(pa_matrix)
 }
@@ -189,6 +190,7 @@ save_pa_matrix <- function(c){
 #' saves matrix for each timestep in respective "abundance_matrices" folder within output folder
 #' matrix format: first two columns x and y contain x&y coordinates, subsequent columns contain abundance values for each cell (rows) for each species (cols)
 #' @export
+#' @param c config.yml which entails the parameter 'timesteps' that was set for the simulation
 #' @return abundance matrix
 save_abund_matrix <- function(c){
   
@@ -207,7 +209,7 @@ save_abund_matrix <- function(c){
     abundance_matrix[names(data$all_species[[i-2]]$abundance),i] <- data$all_species[[i-2]]$abundance
   }
   # reverse indicated timestep to ensure numbers increase over time (reverse order in gen3sis simulation)
-  write.table(abundance_matrix, file.path(config$directories$output,"abundance_matrices", paste0("species_abund_",c$meta$N_TIMESTEPS-vars$ti, ".txt")), row.names = F, col.names = T)
+  write.table(abundance_matrix, file.path(config$directories$output,"abundance_matrices", paste0("species_abund_",c$timesteps-vars$ti, ".txt")), row.names = F, col.names = T)
   
   return(abundance_matrix)
 }
