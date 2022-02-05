@@ -247,11 +247,11 @@ plot_richness <- function(species_list, landscape) {
 #' @param data data list as available in Gen3sis simulation
 #' @param pa_matrix presence-absence matrix with x and y coordinates in first cols and p/a entries per species in subsequent cols (as generated in Gen3sis observer)
 #' @param abundance_matrix abundance matrix with x and y coordinates in first cols and abundance entries per species in subsequent cols (as generated in Gen3sis observer)
-#'
+#' @param c configuration list derived from config.yml
 #' @return no return value - plot saved for each timestep
 #' @export
 
-plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
+plot_SimulationStep <- function(data, pa_matrix, abundance_matrix, c){
   
   config <- dynGet("config")
   vars <- dynGet("vars")
@@ -263,9 +263,6 @@ plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
   plots <- list()
   
   # create individual plots
-  
-  c <- config::get(file = "config.yml") # read in config stored in yml
-  
   # Environmental layers
   layernames <- colnames(data[["landscape"]][["environment"]])
   for(l in 1:length(layernames)){
@@ -277,9 +274,9 @@ plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
     
     # plot with different colour palette
     if(layername == "disturbance"){
-      plots[[layername]] <- raster_plot(df, label = LETTERS[l],  metric = layername, dir = 1, ColPalette = "Reds")
+      plots[[layername]] <- raster_plot(df, c, label = LETTERS[l],  metric = layername, dir = 1, ColPalette = "Reds")
     }else{
-      plots[[layername]] <- raster_plot(df, label = LETTERS[l],  metric = layername, dir = -1, ColPalette = "Spectral")
+      plots[[layername]] <- raster_plot(df, c, label = LETTERS[l],  metric = layername, dir = -1, ColPalette = "Spectral")
     }
 
   }
@@ -293,7 +290,7 @@ plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
   df <- data.frame(x = pa_matrix[,1]*c$x_sim,
                    y = pa_matrix[,2]*c$y_sim,
                    z = richness)
-  plots[["richness"]] <- raster_plot(df, label = LETTERS[length(layernames)+1], 
+  plots[["richness"]] <- raster_plot(df, c, label = LETTERS[length(layernames)+1], 
                                      metric ="richness", dir = 1, ColPalette = "Blues")  
   
   # Abundance
@@ -305,7 +302,7 @@ plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
   df <- data.frame(x = abundance_matrix[,1]*c$x_sim,
                    y = abundance_matrix[,2]*c$y_sim,
                    z = abundance)
-  plots[["abundance"]] <- raster_plot(df, label = LETTERS[length(layernames)+2], 
+  plots[["abundance"]] <- raster_plot(df, c, label = LETTERS[length(layernames)+2], 
                                       metric ="abundance", dir = 1, ColPalette = "Greens")
 
   # Combine as multiplot
@@ -323,16 +320,16 @@ plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
 #' plots continuous data in raster cells
 #' NOTE: expects config.yml in same or parent folder with x_sim, y_sim, x_obs, y_obs
 #' @param df dataframe with columns x, y, z, with x & y being coordinates and z the value to be plotted
+#' @param c config list derived from config.yml
 #' @param label character vector that should be shown as a label of the plot (also refered to as tag, e.g. A)
 #' @param metric character vector that should be shown as the label in the legend of values z (e.g. richness)
 #' @param dir integer indicating the direction of the colour vector (can be 1 or -1)
 #' @param ColPalette colourBrewer palette that should be used for the colours of the raster plot
 #'
 #' @return ggplot with coloured raster (input for plot_SimulationStep function)
-raster_plot <- function(df, label = NA, metric = NA, dir = 1, ColPalette = "Blues"){
+raster_plot <- function(df, c, label = NA, metric = NA, dir = 1, ColPalette = "Blues"){
   
   # define values for observation area corners
-  c <- config::get(file = "config.yml") # read in config stored in yml
   x_low <- (c$x_sim - c$x_obs)/2+1 
   x_high <- x_low + c$x_obs
   y_low <- (c$y_sim - c$y_obs)/2+1
