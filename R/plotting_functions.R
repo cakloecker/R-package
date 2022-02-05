@@ -240,7 +240,123 @@ plot_richness <- function(species_list, landscape) {
                    col=rc)
 }
 
+#' This function can be called within the observer function to save a multiplot for each timestep, 
+#' containing the landscape rasters and species abundance & richness, incl. indicated observation area
+#' NOTE: requires plot_raster()
+#' @param c list with the experiment configuration from  yaml file
+#' @param data data list as available in Gen3sis simulation
+#' @param pa_matrix presence-absence matrix with x and y coordinates in first cols and p/a entries per species in subsequent cols (as generated in Gen3sis observer)
+#' @param abundance_matrix abundance matrix with x and y coordinates in first cols and abundance entries per species in subsequent cols (as generated in Gen3sis observer)
+#'
+#' @return no return value - plot saved for each timestep
+#' @export
 
+plot_SimulationStep <- function(data, pa_matrix, abundance_matrix){
+  
+  config <- dynGet("config")
+  vars <- dynGet("vars")
+  
+  # define current simulation timestep
+  t <- config$gen3sis$general$start_time-vars$ti+1
+  
+  # generate empty list for all four plots
+  plots <- list()
+  
+  # create individual plots
+  
+  c <- config::get(file = "config.yml") # read in config stored in yml
+  
+  # Environmental layers
+  layernames <- colnames(data[["landscape"]][["environment"]])
+  for(l in 1:length(layernames)){
+    layername <- layernames[l]
+    layer <- data[["landscape"]][["environment"]][,l] 
+    df <- data.frame(x = data[["landscape"]][["coordinates"]][,1]*c$x_sim, # x coordinates
+                     y = data[["landscape"]][["coordinates"]][,2]*c$y_sim, # y coordinates
+                     z = layer)
+    
+    # plot with different colour palette
+    if(layername == "disturbance"){
+      plots[[layername]] <- raster_plot(df, label = LETTERS[l],  metric = layername, dir = 1, ColPalette = "Reds")
+    }else{
+      plots[[layername]] <- raster_plot(df, label = LETTERS[l],  metric = layername, dir = -1, ColPalette = "Spectral")
+    }
+
+  }
+
+  # Richness
+  if(ncol(pa_matrix) == 3){ # only one species present
+    richness <- sum(pa_matrix[,3])
+  }else{
+    richness <- rowSums(pa_matrix[,3:ncol(pa_matrix)]) 
+  }
+  df <- data.frame(x = pa_matrix[,1]*c$x_sim,
+                   y = pa_matrix[,2]*c$y_sim,
+                   z = richness)
+  plots[["richness"]] <- raster_plot(df, label = LETTERS[length(layernames)+1], 
+                                     metric ="richness", dir = 1, ColPalette = "Blues")  
+  
+  # Abundance
+  if(ncol(abundance_matrix) == 3){ # only one species present
+    abundance <- sum(abundance_matrix[,3])
+  }else{
+    abundance <- rowSums(abundance_matrix[,3:ncol(abundance_matrix)])
+  }
+  df <- data.frame(x = abundance_matrix[,1]*c$x_sim,
+                   y = abundance_matrix[,2]*c$y_sim,
+                   z = abundance)
+  plots[["abundance"]] <- raster_plot(df, label = LETTERS[length(layernames)+2], 
+                                      metric ="abundance", dir = 1, ColPalette = "Greens")
+
+  # Combine as multiplot
+  plots_arranged <- gridExtra::arrangeGrob(grobs=plots, nrow = round((length(layernames)+2)/2))
+  
+  # save multiplot
+  plot_folder <- file.path(config$directories$output, "plots")
+  sim_steps_folder <- file.path(config$directories$output, "plots", "sim_steps")
+  if(!dir.exists(plot_folder)){dir.create(plot_folder)}
+  if(!dir.exists(sim_steps_folder)){dir.create(sim_steps_folder)}
+  ggsave(filename = file.path(sim_steps_folder, paste0("SimulationStep_t_",t,".pdf")),
+         plot = plots_arranged, width = 20, height = 12)
+}
+### helper function for plot_SimulationStep
+#' plots continuous data in raster cells
+#' NOTE: expects config.yml in same or parent folder with x_sim, y_sim, x_obs, y_obs
+#' @param df dataframe with columns x, y, z, with x & y being coordinates and z the value to be plotted
+#' @param label character vector that should be shown as a label of the plot (also refered to as tag, e.g. A)
+#' @param metric character vector that should be shown as the label in the legend of values z (e.g. richness)
+#' @param dir integer indicating the direction of the colour vector (can be 1 or -1)
+#' @param ColPalette colourBrewer palette that should be used for the colours of the raster plot
+#'
+#' @return ggplot with coloured raster (input for plot_SimulationStep function)
+raster_plot <- function(df, label = NA, metric = NA, dir = 1, ColPalette = "Blues"){
+  
+  # define values for observation area corners
+  c <- config::get(file = "config.yml") # read in config stored in yml
+  x_low <- (c$x_sim - c$x_obs)/2+1 
+  x_high <- x_low + c$x_obs
+  y_low <- (c$y_sim - c$y_obs)/2+1
+  y_high <- y_low + c$y_obs
+  
+  # change palette if only zero values i.e. no applied disturbance - bright value
+  if(max(df$z) == 0){ColPalette = "Spectral"}
+  
+  # plot raster
+  p <- ggplot() +
+    geom_raster(data = df , aes(x = x+1, y= y+1, fill = z)) +
+    labs(fill = metric, tag = label)+
+    # define colour palette
+    scale_fill_distiller(direction = dir, palette = ColPalette)+
+    coord_quickmap()+
+    # add observation area polygon
+    geom_polygon(data = data.frame(x = c(x_low, x_low, x_high, x_high),
+                                   y = c(y_low, y_high, y_high, y_low)),
+                 aes(x = x, y = y), color="grey40", alpha  = 0, size=1)+
+    # adjust theme and remove labels
+    theme_minimal()+
+    theme(axis.title.x = element_blank(),axis.title.y = element_blank(),)
+  return(p)
+}
 
 #' Plot species ranges of the given list of species on a landscape
 #'
@@ -392,3 +508,4 @@ color_richness_non_CVDCBP <- colorRampPalette(
   c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF",
     "#6DCD59FF", "#B4DE2CFF", "#FDE725FF", "#FFA500",   "#FF2900",   "#C40000",   "#8B0000", "#8B0000")
 )
+
